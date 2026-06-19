@@ -18,7 +18,8 @@ export function PlanetPills() {
 
   return (
     <motion.div
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-wrap justify-center gap-1.5 px-4 max-w-[90vw]"
+      // Pinned to very bottom — CyraGuide sits above this on mobile via bottom-[72px]
+      className="fixed bottom-0 left-0 right-0 z-20 flex flex-wrap justify-center gap-1.5 px-3 py-2 bg-black/40 backdrop-blur-md md:bg-transparent md:backdrop-blur-none md:bottom-6 md:left-1/2 md:-translate-x-1/2 md:w-auto md:right-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.8, duration: 0.5 }}
