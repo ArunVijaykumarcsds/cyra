@@ -227,6 +227,12 @@ export const useCyraStore = create<CyraStore>()(
       selectPlanet: (planet) => {
         if (planet) {
           get().openPlanetPanel(planet)
+          // Lock camera onto the clicked planet immediately
+          set(
+            { focusedPlanet: planet, cameraMode: 'focus' },
+            false,
+            'selectPlanet:focus'
+          )
         } else {
           get().closePlanetPanel()
         }
