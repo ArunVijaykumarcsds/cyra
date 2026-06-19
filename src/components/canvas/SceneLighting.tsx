@@ -1,29 +1,29 @@
 export function SceneLighting() {
   return (
     <>
-      {/* Sun point light - primary illumination */}
+      {/* Sun point light - primary illumination, boosted intensity + range */}
       <pointLight
         position={[0, 0, 0]}
-        intensity={8}
+        intensity={25}
         color="#FFF5E0"
-        distance={300}
-        decay={1.2}
+        distance={500}
+        decay={1.0}
         castShadow
         shadow-mapSize={[1024, 1024]}
-        shadow-camera-far={300}
+        shadow-camera-far={500}
       />
-      {/* Soft ambient for dark side visibility */}
-      <ambientLight intensity={0.08} color="#0A1628" />
-      {/* Subtle hemisphere for deep space feel */}
-      <hemisphereLight
-        args={['#0D1B2A', '#000000', 0.15]}
+      {/* Secondary fill from opposite side so dark hemispheres aren't pitch black */}
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={4}
+        color="#FFF5E0"
+        distance={500}
+        decay={1.0}
       />
-      {/* Secondary fill light from opposite direction */}
-      <directionalLight
-        position={[-100, 50, -100]}
-        intensity={0.05}
-        color="#1A3A5C"
-      />
+      {/* Ambient — raised so planets are readable against the starfield */}
+      <ambientLight intensity={0.35} color="#1A2A4A" />
+      {/* Hemisphere for subtle deep-space toning */}
+      <hemisphereLight args={['#1A2A4A', '#000000', 0.4]} />
     </>
   )
 }
