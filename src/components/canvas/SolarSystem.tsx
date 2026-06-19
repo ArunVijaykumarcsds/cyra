@@ -44,7 +44,7 @@ function AnimatedScene() {
             <OrbitRing
               radius={planet.orbitRadius}
               color={planet.color}
-              opacity={0.1}
+              opacity={0.07}
               inclination={planet.orbitInclination}
             />
           )}
@@ -68,10 +68,12 @@ export function SolarSystem() {
       gl={{
         antialias: true,
         toneMapping: 4, // THREE.ACESFilmicToneMapping
-        toneMappingExposure: 0.9,
+        toneMappingExposure: 1.4,  // raised from 0.9 → 1.4 for brighter overall scene
         alpha: false,
       }}
-      camera={{ position: [0, 45, 90], fov: 55, near: 0.1, far: 1000 }}
+      // Elevated 3/4 view: y raised from 45→60, z pulled back from 90→100
+      // This gives a proper isometric-ish angle that shows the full disc
+      camera={{ position: [0, 60, 100], fov: 50, near: 0.1, far: 1000 }}
       style={{ background: '#000005' }}
       dpr={[1, 2]}
     >
