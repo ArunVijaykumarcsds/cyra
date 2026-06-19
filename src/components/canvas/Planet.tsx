@@ -5,11 +5,11 @@ import * as THREE from 'three'
 import { useCyraStore } from '@/store'
 import { useCyra } from '@/hooks/useCyra'
 import { SaturnRings } from './SaturnRings'
+import { planetAngles } from './CameraController'
 import type { Planet, PlanetName } from '@/types'
 
 interface PlanetMeshProps {
   planet: Planet
-  angle: number
   showLabel: boolean
 }
 
@@ -19,7 +19,6 @@ function createPlanetTexture(planet: Planet): THREE.Texture {
   canvas.height = 128
   const ctx = canvas.getContext('2d')!
 
-  // Base gradient
   const grad = ctx.createLinearGradient(0, 0, 256, 128)
   const c = planet.color
 
@@ -62,7 +61,6 @@ function createPlanetTexture(planet: Planet): THREE.Texture {
   ctx.fillStyle = grad
   ctx.fillRect(0, 0, 256, 128)
 
-  // Add surface detail noise
   for (let i = 0; i < 200; i++) {
     const x = Math.random() * 256
     const y = Math.random() * 128
@@ -74,21 +72,18 @@ function createPlanetTexture(planet: Planet): THREE.Texture {
     ctx.fill()
   }
 
-  // Jupiter bands
   if (planet.name === 'Jupiter') {
     const bands = [0.1, 0.25, 0.4, 0.55, 0.7, 0.85]
     bands.forEach((b) => {
       ctx.fillStyle = 'rgba(160,96,48,0.3)'
       ctx.fillRect(0, b * 128 - 4, 256, 8)
     })
-    // Great Red Spot
     ctx.beginPath()
     ctx.ellipse(80, 64, 20, 12, 0, 0, Math.PI * 2)
     ctx.fillStyle = 'rgba(200,80,40,0.5)'
     ctx.fill()
   }
 
-  // Saturn bands
   if (planet.name === 'Saturn') {
     const bands = [0.2, 0.4, 0.6, 0.8]
     bands.forEach((b) => {
@@ -97,7 +92,6 @@ function createPlanetTexture(planet: Planet): THREE.Texture {
     })
   }
 
-  // Earth cloud patches
   if (planet.name === 'Earth') {
     for (let i = 0; i < 15; i++) {
       ctx.beginPath()
@@ -121,7 +115,8 @@ function createPlanetTexture(planet: Planet): THREE.Texture {
   return texture
 }
 
-export function PlanetMesh({ planet, angle, showLabel }: PlanetMeshProps) {
+export function PlanetMesh({ planet, showLabel }: PlanetMeshProps) {
+  const groupRef = useRef<THREE.Group>(null)
   const meshRef = useRef<THREE.Mesh>(null)
   const glowRef = useRef<THREE.Mesh>(null)
 
@@ -139,7 +134,6 @@ export function PlanetMesh({ planet, angle, showLabel }: PlanetMeshProps) {
         map: texture,
         roughness: 0.75,
         metalness: 0.05,
-        // Subtle self-emission keeps night-side readable at overview distance
         emissive: new THREE.Color(planet.color),
         emissiveIntensity: 0.12,
       }),
@@ -158,16 +152,25 @@ export function PlanetMesh({ planet, angle, showLabel }: PlanetMeshProps) {
     [planet.glowColor, isSelected, isHovered]
   )
 
-  // Planet world position based on orbit
-  const x = Math.cos(angle) * planet.orbitRadius
-  const z = Math.sin(angle) * planet.orbitRadius
   const incRad = (planet.orbitInclination * Math.PI) / 180
-  const y = Math.sin(angle) * planet.orbitRadius * Math.sin(incRad) * 0.1
 
   useFrame(({ clock }) => {
+    // ── Orbital position: read live angle from shared ref every frame ──
+    const angle = planetAngles[planet.name] ?? 0
+    const x = Math.cos(angle) * planet.orbitRadius
+    const z = Math.sin(angle) * planet.orbitRadius
+    const y = Math.sin(angle) * planet.orbitRadius * Math.sin(incRad) * 0.1
+
+    if (groupRef.current) {
+      groupRef.current.position.set(x, y, z)
+    }
+
+    // ── Axial spin ──
     if (meshRef.current) {
       meshRef.current.rotation.y += planet.rotationSpeed
     }
+
+    // ── Selection glow pulse ──
     if (glowRef.current) {
       const pulse = 1 + Math.sin(clock.getElapsedTime() * 1.5) * 0.05
       glowRef.current.scale.setScalar(pulse)
@@ -205,7 +208,8 @@ export function PlanetMesh({ planet, angle, showLabel }: PlanetMeshProps) {
   const labelScale = Math.max(0.8, planet.size * 0.6)
 
   return (
-    <group position={[x, y, z]}>
+    // groupRef drives orbital position — updated every frame in useFrame
+    <group ref={groupRef}>
       {/* Glow halo */}
       <Sphere ref={glowRef} args={[planet.size * 1.35, 32, 32]}>
         <primitive object={glowMaterial} attach="material" />
@@ -224,7 +228,6 @@ export function PlanetMesh({ planet, angle, showLabel }: PlanetMeshProps) {
         <primitive object={bodyMaterial} attach="material" />
       </Sphere>
 
-      {/* Saturn rings */}
       {planet.name === 'Saturn' && (
         <SaturnRings
           innerRadius={planet.size * 1.4}
@@ -232,7 +235,6 @@ export function PlanetMesh({ planet, angle, showLabel }: PlanetMeshProps) {
         />
       )}
 
-      {/* Uranus thin rings */}
       {planet.name === 'Uranus' && (
         <mesh rotation={[Math.PI * 0.48, 0, 0]}>
           <ringGeometry args={[planet.size * 1.3, planet.size * 1.65, 128]} />
@@ -246,7 +248,6 @@ export function PlanetMesh({ planet, angle, showLabel }: PlanetMeshProps) {
         </mesh>
       )}
 
-      {/* Label */}
       {showLabel && (
         <Html
           position={[0, -(planet.size + 0.6 * labelScale), 0]}
