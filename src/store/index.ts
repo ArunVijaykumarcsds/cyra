@@ -42,6 +42,7 @@ interface CameraState {
   showOrbits: boolean
   showLabels: boolean
   timeScale: number
+  overviewTrigger: number
 }
 
 // ─── Search State ─────────────────────────────────────────────────────────────
@@ -134,6 +135,7 @@ export const useCyraStore = create<CyraStore>()(
       showOrbits: true,
       showLabels: true,
       timeScale: 1,
+      overviewTrigger: 0,
 
       // ── Initial Search State ──────────────────────────────────────────────
       searchQuery: '',
@@ -287,12 +289,13 @@ export const useCyraStore = create<CyraStore>()(
 
       resetCamera: () =>
         set(
-          {
+          (s) => ({
             cameraMode: 'overview',
             focusedPlanet: null,
             selectedPlanet: null,
             isPlanetPanelOpen: false,
-          },
+            overviewTrigger: s.overviewTrigger + 1,
+          }),
           false,
           'resetCamera'
         ),
