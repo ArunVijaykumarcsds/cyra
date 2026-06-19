@@ -12,17 +12,26 @@ export function TopBar() {
     isSearchOpen,
     showOrbits,
     showLabels,
+    cameraMode,
     toggleCompare,
     toggleLearn,
     toggleSearch,
     toggleOrbits,
     toggleLabels,
     resetCamera,
+    setCameraMode,
   } = useCyraStore()
 
   const { speakCompare, speakLearn, speakSearch, speakOverview } = useCyra()
 
   if (isLandingVisible) return null
+
+  const handleOverview = () => {
+    resetCamera()
+    // Explicitly set camera mode so CameraController always fires
+    setCameraMode('overview')
+    speakOverview()
+  }
 
   return (
     <motion.header
@@ -36,14 +45,10 @@ export function TopBar() {
     >
       {/* Logo */}
       <button
-        onClick={() => {
-          resetCamera()
-          speakOverview()
-        }}
+        onClick={handleOverview}
         className="flex items-center gap-2 group focus:outline-none"
         aria-label="CYRA - Return to overview"
       >
-        {/* Mini orb */}
         <div className="relative w-5 h-5">
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-nebula-cyan/80 to-blue-700/60 group-hover:shadow-[0_0_16px_rgba(0,229,255,0.6)] transition-shadow duration-300" />
           <div className="absolute inset-[35%] rounded-full bg-white/80" />
@@ -53,7 +58,7 @@ export function TopBar() {
         </span>
       </button>
 
-      {/* Center nav */}
+      {/* Center nav — desktop only */}
       <nav className="hidden md:flex items-center gap-1.5" role="navigation" aria-label="Main navigation">
         <Button
           variant="ghost"
@@ -88,38 +93,51 @@ export function TopBar() {
 
         <div className="w-px h-4 bg-white/8 mx-1" />
 
-        <Button
-          variant="ghost"
-          size="sm"
-          active={showOrbits}
+        {/* Orbits toggle — cyan tint when ON */}
+        <button
           onClick={toggleOrbits}
           aria-label={showOrbits ? 'Hide orbit paths' : 'Show orbit paths'}
           aria-pressed={showOrbits}
+          className={cn(
+            'px-3 py-1.5 text-[10px] tracking-[0.15em] uppercase font-mono transition-all duration-200 focus:outline-none',
+            showOrbits
+              ? 'text-nebula-cyan border border-nebula-cyan/40 bg-nebula-cyan/8'
+              : 'text-white/40 border border-white/10 hover:text-white/70 hover:border-white/25'
+          )}
         >
           Orbits
-        </Button>
+        </button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          active={showLabels}
+        {/* Labels toggle */}
+        <button
           onClick={toggleLabels}
           aria-label={showLabels ? 'Hide planet labels' : 'Show planet labels'}
           aria-pressed={showLabels}
+          className={cn(
+            'px-3 py-1.5 text-[10px] tracking-[0.15em] uppercase font-mono transition-all duration-200 focus:outline-none',
+            showLabels
+              ? 'text-nebula-cyan border border-nebula-cyan/40 bg-nebula-cyan/8'
+              : 'text-white/40 border border-white/10 hover:text-white/70 hover:border-white/25'
+          )}
         >
           Labels
-        </Button>
+        </button>
 
         <div className="w-px h-4 bg-white/8 mx-1" />
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => { resetCamera(); speakOverview() }}
-          aria-label="Reset camera to overview"
+        {/* Overview — highlights when camera is in overview mode */}
+        <button
+          onClick={handleOverview}
+          aria-label="Reset camera to full solar system overview"
+          className={cn(
+            'px-3 py-1.5 text-[10px] tracking-[0.15em] uppercase font-mono transition-all duration-200 focus:outline-none',
+            cameraMode === 'overview'
+              ? 'text-nebula-cyan border border-nebula-cyan/40 bg-nebula-cyan/8'
+              : 'text-white/40 border border-white/10 hover:text-white/70 hover:border-white/25'
+          )}
         >
           Overview
-        </Button>
+        </button>
       </nav>
 
       {/* Mobile menu trigger */}
