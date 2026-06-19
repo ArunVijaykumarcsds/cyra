@@ -47,7 +47,7 @@ function AnimatedScene() {
             <OrbitRing
               radius={planet.orbitRadius}
               color={planet.color}
-              opacity={0.25}
+              opacity={0.35}
               inclination={planet.orbitInclination}
             />
           )}
