@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useCyra } from '@/hooks/useCyra'
 import { useCyraStore } from '@/store'
 import { cn } from '@/utils/cn'
@@ -29,7 +29,9 @@ export function CyraGuide() {
 
   return (
     <motion.div
-      className="fixed bottom-6 left-6 w-72 z-30 select-none"
+      // On mobile: bottom of screen above the planet pills row
+      // On desktop: fixed bottom-left as before
+      className="fixed bottom-[72px] left-3 right-3 z-30 select-none md:bottom-6 md:left-6 md:right-auto md:w-72"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5, duration: 0.6 }}
@@ -44,7 +46,6 @@ export function CyraGuide() {
           whileTap={{ scale: 0.95 }}
         >
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-nebula-cyan/80 to-blue-600/60 border border-nebula-cyan/50" />
-          {/* Pulse ring */}
           <motion.div
             className="absolute inset-[-3px] rounded-full border border-nebula-cyan/20"
             animate={{ scale: [1, 1.12, 1], opacity: [0.3, 0.7, 0.3] }}
@@ -55,7 +56,6 @@ export function CyraGuide() {
             animate={{ scale: [1, 1.18, 1], opacity: [0.1, 0.4, 0.1] }}
             transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut', delay: 0.3 }}
           />
-          {/* Inner glow dot */}
           <div className="absolute inset-[35%] rounded-full bg-white/80 shadow-[0_0_8px_#00E5FF]" />
         </motion.div>
 
