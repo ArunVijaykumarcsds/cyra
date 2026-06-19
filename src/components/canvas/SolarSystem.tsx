@@ -14,9 +14,11 @@ import { CameraController, planetAngles } from './CameraController'
 // Separate component so we can use useFrame inside Canvas
 function AnimatedScene() {
   const anglesRef = useRef<Record<string, number>>({})
+  // Track render tick so PlanetMesh re-renders each frame with fresh angles
+  const tickRef = useRef(0)
   const { showOrbits, showLabels, timeScale, orbitSpeed } = useCyraStore()
 
-  // Initialize angles
+  // Initialize angles evenly spread around the orbit
   useEffect(() => {
     PLANETS.forEach((p, i) => {
       anglesRef.current[p.name] = (i / PLANETS.length) * Math.PI * 2
@@ -30,6 +32,7 @@ function AnimatedScene() {
       anglesRef.current[p.name] = (anglesRef.current[p.name] ?? 0) + speed * delta * 60
       planetAngles[p.name] = anglesRef.current[p.name]
     })
+    tickRef.current += 1
   })
 
   return (
@@ -48,9 +51,10 @@ function AnimatedScene() {
               inclination={planet.orbitInclination}
             />
           )}
+          {/* PlanetMesh now reads its own angle from the shared planetAngles
+              ref inside its own useFrame — no prop needed for position */}
           <PlanetMesh
             planet={planet}
-            angle={anglesRef.current[planet.name] ?? 0}
             showLabel={showLabels}
           />
         </group>
@@ -68,11 +72,9 @@ export function SolarSystem() {
       gl={{
         antialias: true,
         toneMapping: 4, // THREE.ACESFilmicToneMapping
-        toneMappingExposure: 1.4,  // raised from 0.9 → 1.4 for brighter overall scene
+        toneMappingExposure: 1.4,
         alpha: false,
       }}
-      // Elevated 3/4 view: y=70, z=120 — wide enough to frame all 8 planets
-      
       camera={{ position: [0, 70, 120], fov: 58, near: 0.1, far: 1000 }}
       style={{ background: '#000005' }}
       dpr={[1, 2]}
