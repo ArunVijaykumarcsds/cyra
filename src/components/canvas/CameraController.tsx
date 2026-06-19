@@ -7,7 +7,7 @@ import { useCyraStore } from '@/store'
 import { PLANET_MAP } from '@/data/planets'
 import { planetCameraDistance } from '@/utils/math'
 
-// We track planet angles via a shared ref (set by SolarSystem)
+// Shared orbital angle ref — written by SolarSystem, read by Planet + here
 export const planetAngles: Record<string, number> = {}
 
 export function CameraController() {
@@ -20,7 +20,12 @@ export function CameraController() {
   const animStart = useRef(new THREE.Vector3())
   const animEnd = useRef(new THREE.Vector3())
 
-  const { cameraMode, focusedPlanet, resetCamera } = useCyraStore()
+  // Track the last values we acted on so we re-trigger even if value didn't change
+  const lastMode = useRef<string>('')
+  const lastPlanet = useRef<string | null>(null)
+  const overviewCounter = useRef(0)
+
+  const { cameraMode, focusedPlanet, overviewTrigger } = useCyraStore()
 
   // Set initial camera position
   useEffect(() => {
@@ -28,7 +33,7 @@ export function CameraController() {
     camera.lookAt(0, 0, 0)
   }, [camera])
 
-  // Trigger animation when focused planet changes
+  // React to focus changes
   useEffect(() => {
     if (cameraMode === 'focus' && focusedPlanet) {
       const planet = PLANET_MAP.get(focusedPlanet)
@@ -43,7 +48,6 @@ export function CameraController() {
       const planetPos = new THREE.Vector3(x, y, z)
       const dist = planetCameraDistance(planet.size)
 
-      // Camera offset: slightly above and to the side
       const camTarget = new THREE.Vector3(
         x + dist * 0.6,
         y + dist * 0.4,
@@ -60,19 +64,35 @@ export function CameraController() {
         controlsRef.current.target.copy(planetPos)
         controlsRef.current.enabled = false
       }
-    } else if (cameraMode === 'overview') {
-      const overviewPos = new THREE.Vector3(0, 70, 120)
-      animStart.current.copy(camera.position)
-      animEnd.current.copy(overviewPos)
-      targetPosition.current.set(0, 0, 0)
-      isAnimating.current = true
-      animProgress.current = 0
 
-      if (controlsRef.current) {
-        controlsRef.current.target.set(0, 0, 0)
-      }
+      lastMode.current = 'focus'
+      lastPlanet.current = focusedPlanet
     }
   }, [cameraMode, focusedPlanet, camera])
+
+  // React to overview — uses overviewTrigger counter so clicking Overview
+  // twice in a row (when already in overview mode) still fires the animation
+  useEffect(() => {
+    if (cameraMode !== 'overview') return
+
+    const overviewPos = new THREE.Vector3(0, 70, 120)
+    animStart.current.copy(camera.position)
+    animEnd.current.copy(overviewPos)
+    targetPosition.current.set(0, 0, 0)
+    currentLookAt.current.copy(camera.position) // reset smooth look-at origin
+    isAnimating.current = true
+    animProgress.current = 0
+
+    if (controlsRef.current) {
+      controlsRef.current.target.set(0, 0, 0)
+      controlsRef.current.enabled = false
+    }
+
+    lastMode.current = 'overview'
+    lastPlanet.current = null
+  // overviewTrigger is a counter in the store incremented every time resetCamera is called
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overviewTrigger])
 
   useFrame((_, delta) => {
     if (isAnimating.current) {
@@ -81,18 +101,15 @@ export function CameraController() {
 
       camera.position.lerpVectors(animStart.current, animEnd.current, t)
 
-      // Smooth look-at
       currentLookAt.current.lerp(targetPosition.current, delta * 3)
       camera.lookAt(currentLookAt.current)
 
       if (animProgress.current >= 1) {
         isAnimating.current = false
-        if (controlsRef.current && cameraMode === 'focus') {
+        if (controlsRef.current) {
           controlsRef.current.enabled = true
           controlsRef.current.target.copy(targetPosition.current)
           controlsRef.current.update()
-        } else if (controlsRef.current && cameraMode === 'overview') {
-          controlsRef.current.enabled = true
         }
       }
     }
