@@ -137,10 +137,13 @@ export function PlanetMesh({ planet, angle, showLabel }: PlanetMeshProps) {
     () =>
       new THREE.MeshStandardMaterial({
         map: texture,
-        roughness: 0.8,
-        metalness: 0.1,
+        roughness: 0.75,
+        metalness: 0.05,
+        // Subtle self-emission keeps night-side readable at overview distance
+        emissive: new THREE.Color(planet.color),
+        emissiveIntensity: 0.12,
       }),
-    [texture]
+    [texture, planet.color]
   )
 
   const glowMaterial = useMemo(
