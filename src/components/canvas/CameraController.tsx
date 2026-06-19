@@ -24,7 +24,7 @@ export function CameraController() {
 
   // Set initial camera position
   useEffect(() => {
-    camera.position.set(0, 60, 100)
+    camera.position.set(0, 70, 120)
     camera.lookAt(0, 0, 0)
   }, [camera])
 
@@ -61,7 +61,7 @@ export function CameraController() {
         controlsRef.current.enabled = false
       }
     } else if (cameraMode === 'overview') {
-      const overviewPos = new THREE.Vector3(0, 60, 100)
+      const overviewPos = new THREE.Vector3(0, 70, 120)
       animStart.current.copy(camera.position)
       animEnd.current.copy(overviewPos)
       targetPosition.current.set(0, 0, 0)
